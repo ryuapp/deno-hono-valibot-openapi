@@ -55,7 +55,7 @@ app.get(
 );
 
 app.get(
-  "/:name",
+  "/hello/:name",
   describeRoute({
     description: "Say hello to the user",
     responses: {
