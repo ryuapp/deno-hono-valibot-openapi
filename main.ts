@@ -4,32 +4,12 @@ import { resolver, validator as vValidator } from "hono-openapi/valibot";
 import { apiReference } from "@scalar/hono-api-reference";
 import * as v from "valibot";
 
-const querySchema = v.object({
-  name: v.optional(v.string()),
+const paramSchema = v.object({
+  name: v.pipe(v.string(), v.minLength(3)),
 });
 
 const responseSchema = v.string();
 const app = new Hono();
-
-app.get(
-  "/",
-  describeRoute({
-    description: "Say hello to the user",
-    responses: {
-      200: {
-        description: "Successful response",
-        content: {
-          "text/plain": { schema: resolver(responseSchema) },
-        },
-      },
-    },
-  }),
-  vValidator("query", querySchema),
-  (c) => {
-    const query = c.req.valid("query");
-    return c.text(`Hello ${query?.name ?? "Hono"}!`);
-  },
-);
 
 app.get(
   "/openapi.json",
@@ -51,6 +31,50 @@ app.get(
     theme: "saturn",
     spec: { url: "/openapi.json" },
   }),
+);
+
+app.get(
+  "/",
+  describeRoute({
+    description: "Say hello to Hono",
+    responses: {
+      200: {
+        description: "Successful response",
+        content: {
+          "text/plain": {
+            schema: resolver(responseSchema),
+            example: "Hello Hono!",
+          },
+        },
+      },
+    },
+  }),
+  (c) => {
+    return c.text(`Hello Hono!`);
+  },
+);
+
+app.get(
+  "/:name",
+  describeRoute({
+    description: "Say hello to the user",
+    responses: {
+      200: {
+        description: "Successful response",
+        content: {
+          "text/plain": {
+            schema: resolver(responseSchema),
+            example: "Hello John!",
+          },
+        },
+      },
+    },
+  }),
+  vValidator("param", paramSchema),
+  (c) => {
+    const name = c.req.param("name");
+    return c.text(`Hello ${name}!`);
+  },
 );
 
 export default app;
